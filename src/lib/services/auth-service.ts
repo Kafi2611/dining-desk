@@ -21,7 +21,8 @@ export class AuthService {
   async login(roll: string, password: string): Promise<SessionUser | null> {
     const user = await this.users.findByRoll(roll);
     if (!user) return null;
-    await this.hasher.compare(password, user.passwordHash);
+    const ok = await this.hasher.compare(password, user.passwordHash);
+    if (!ok) return null;
     return {
       id: user.id,
       roll: user.roll,
