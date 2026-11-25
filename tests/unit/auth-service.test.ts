@@ -33,4 +33,12 @@ describe("AuthService.login", () => {
       hallId: 1,
     });
   });
+
+  it("refuses a wrong password", async () => {
+    const { service } = setup(student, false);
+
+    const result = await service.login("2203139", "wrong");
+
+    expect(result).toBeNull();
+  });
 });
