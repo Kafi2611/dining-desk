@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-diningdesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-diningdesk}
+      POSTGRES_DB: ${POSTGRES_DB:-diningdesk}
+    ports:
+      - "5432:5432"
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-diningdesk}:${POSTGRES_PASSWORD:-diningdesk}@db:5432/${POSTGRES_DB:-diningdesk}
+    ports:
+      - "3000:3000"
+
+volumes:
+  dbdata:

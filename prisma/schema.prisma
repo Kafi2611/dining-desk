@@ -1,0 +1,24 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Hall {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+}
+
+// One row only (id = 1). Money is stored in whole poisha: Tk 40 = 4000.
+model Settings {
+  id              Int    @id @default(1)
+  mealRate        Int    @default(4000)
+  guestRate       Int    @default(5000)
+  cutoffTime      String @default("23:00")
+  guestDailyLimit Int    @default(10)
+  minRecharge     Int    @default(50000)
+  lowBalanceAt    Int    @default(8000)
+}
