@@ -1,0 +1,39 @@
+# Local project files (never commit)
+
+# Secrets: only .env.example is allowed
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Logs and OS files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Docker
+docker-compose.override.yml
+
+# Misc
+.vercel
+*.pem
