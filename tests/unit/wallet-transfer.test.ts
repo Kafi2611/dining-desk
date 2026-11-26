@@ -39,6 +39,44 @@ describe("WalletService.transfer", () => {
     });
   });
 
+  it("refuses a wrong sender password and changes nothing", async () => {
+    const { world, service } = setupWalletService();
+
+    await expect(service.transfer(1, "2203002", 10000, "wrong")).rejects.toMatchObject({
+      code: "WRONG_PASSWORD",
+    });
+
+    expect(world.wallets.transaction).not.toHaveBeenCalled();
+    expect(world.balanceOf(1)).toBe(100000);
+    expect(world.events.publish).not.toHaveBeenCalled();
+  });
+
+  it("refuses a student of another hall", async () => {
+    const { world, service } = setupWalletService();
+
+    // 2203004 is in Hall-02, the sender is in Hall-01.
+    await expect(service.transfer(1, "2203004", 10000, "secret")).rejects.toMatchObject({
+      code: "DIFFERENT_HALL",
+    });
+
+    expect(world.wallets.transaction).not.toHaveBeenCalled();
+    expect(world.balanceOf(1)).toBe(100000);
+  });
+
+  it("refuses more than the balance, but allows exactly the balance", async () => {
+    const { world, service } = setupWalletService();
+
+    await expect(service.transfer(1, "2203002", 100001, "secret")).rejects.toMatchObject({
+      code: "INSUFFICIENT_BALANCE",
+    });
+    expect(world.balanceOf(1)).toBe(100000);
+    expect(world.events.publish).not.toHaveBeenCalled();
+
+    await service.transfer(1, "2203002", 100000, "secret");
+    expect(world.balanceOf(1)).toBe(0);
+    expect(world.balanceOf(2)).toBe(100000);
+  });
+
   it("rolls the debit back when the credit fails (all or nothing)", async () => {
     const { world, service } = setupWalletService();
     vi.mocked(world.store.credit).mockRejectedValueOnce(new Error("database went away"));
