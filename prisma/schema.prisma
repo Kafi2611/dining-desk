@@ -7,9 +7,26 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  STUDENT
+  MANAGER
+}
+
 model Hall {
-  id   Int    @id @default(autoincrement())
-  name String @unique
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
+}
+
+model User {
+  id           Int    @id @default(autoincrement())
+  roll         String @unique
+  name         String
+  email        String
+  passwordHash String
+  role         Role
+  hallId       Int
+  hall         Hall   @relation(fields: [hallId], references: [id])
 }
 
 // One row only (id = 1). Money is stored in whole poisha: Tk 40 = 4000.
