@@ -4,6 +4,7 @@ import type { SettingsRepository } from "@/lib/repositories/settings-repository"
 import type { UserLookup } from "@/lib/repositories/user-repository";
 import type { WalletRepository } from "@/lib/repositories/wallet-repository";
 import type { PasswordHasher } from "@/lib/services/auth-service";
+import { dhakaDayRange } from "@/lib/services/dhaka-time";
 import { WalletError } from "@/lib/services/wallet-errors";
 
 export interface WalletServiceDeps {
@@ -48,5 +49,26 @@ export class WalletService {
     if (!paid) {
       throw new WalletError("PAYMENT_FAILED", "bKash payment failed. No money was taken");
     }
+  }
+
+  // FR4: 1 offline request per student per Dhaka day. The manager decides later.
+  async requestOffline(userId: number, amount: number, reference: string): Promise<void> {
+    const { start, end } = dhakaDayRange(new Date());
+    await this.deps.wallets.transaction(async (tx) => {
+      const already = await tx.countRechargeRequests(userId, "OFFLINE", start, end);
+      if (already >= 1) {
+        throw new WalletError(
+          "ALREADY_REQUESTED_TODAY",
+          "You can send only 1 offline recharge request per day",
+        );
+      }
+      const result = await this.deps.offlineGateway.charge(amount, reference);
+      await tx.createRechargeRequest({
+        userId,
+        amount,
+        method: "OFFLINE",
+        reference: result.reference ?? reference,
+      });
+    });
   }
 }
