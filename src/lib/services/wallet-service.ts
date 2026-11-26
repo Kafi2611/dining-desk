@@ -2,7 +2,7 @@ import type { EventBus } from "@/lib/patterns/events/event-bus";
 import type { PaymentGateway } from "@/lib/patterns/payment/payment-gateway";
 import type { SettingsRepository } from "@/lib/repositories/settings-repository";
 import type { UserLookup } from "@/lib/repositories/user-repository";
-import type { WalletRepository } from "@/lib/repositories/wallet-repository";
+import type { WalletRepository, WalletStore } from "@/lib/repositories/wallet-repository";
 import type { PasswordHasher } from "@/lib/services/auth-service";
 import { dhakaDayRange } from "@/lib/services/dhaka-time";
 import { WalletError } from "@/lib/services/wallet-errors";
@@ -70,5 +70,64 @@ export class WalletService {
         reference: result.reference ?? reference,
       });
     });
+  }
+
+  // The caller (server action) has already checked that managerId is a MANAGER.
+  async approveOffline(managerId: number, requestId: number): Promise<void> {
+    const request = await this.deps.wallets.transaction(async (tx) => {
+      const req = await this.findPending(tx, requestId);
+      const wallet = await tx.getWalletByUserId(req.userId);
+      if (!wallet) throw new WalletError("NO_WALLET", "Wallet not found");
+      const balanceAfter = await tx.credit(wallet.id, req.amount);
+      await tx.addTransaction({
+        walletId: wallet.id,
+        type: "RECHARGE",
+        method: "OFFLINE",
+        amount: req.amount,
+        status: "COMPLETED",
+        balanceAfter,
+        note: req.reference,
+      });
+      await tx.decideRechargeRequest(requestId, "APPROVED", managerId, new Date());
+      return req;
+    });
+    await this.deps.events.publish({
+      type: "RechargeApproved",
+      userId: request.userId,
+      amount: request.amount,
+    });
+  }
+
+  async rejectOffline(managerId: number, requestId: number): Promise<void> {
+    const request = await this.deps.wallets.transaction(async (tx) => {
+      const req = await this.findPending(tx, requestId);
+      const wallet = await tx.getWalletByUserId(req.userId);
+      if (!wallet) throw new WalletError("NO_WALLET", "Wallet not found");
+      await tx.addTransaction({
+        walletId: wallet.id,
+        type: "RECHARGE",
+        method: "OFFLINE",
+        amount: req.amount,
+        status: "REJECTED",
+        balanceAfter: wallet.balance,
+        note: req.reference,
+      });
+      await tx.decideRechargeRequest(requestId, "REJECTED", managerId, new Date());
+      return req;
+    });
+    await this.deps.events.publish({
+      type: "RechargeRejected",
+      userId: request.userId,
+      amount: request.amount,
+    });
+  }
+
+  private async findPending(tx: WalletStore, requestId: number) {
+    const req = await tx.findRechargeRequest(requestId);
+    if (!req) throw new WalletError("REQUEST_NOT_FOUND", "Recharge request not found");
+    if (req.status !== "PENDING") {
+      throw new WalletError("REQUEST_NOT_PENDING", "This request was already decided");
+    }
+    return req;
   }
 }
