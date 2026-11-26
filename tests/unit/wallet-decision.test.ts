@@ -51,6 +51,15 @@ describe("WalletService.approveOffline", () => {
     expect(world.balanceOf(1)).toBe(150000);
   });
 
+  it("still succeeds when publishing the event fails (the money already moved)", async () => {
+    const { world, service } = await setupWithRequest();
+    world.events.publish.mockRejectedValue(new Error("bell is broken"));
+
+    await expect(service.approveOffline(MANAGER_ID, 1)).resolves.toBeUndefined();
+
+    expect(world.balanceOf(1)).toBe(150000);
+  });
+
   it("refuses a request that does not exist", async () => {
     const { service } = await setupWithRequest();
 
