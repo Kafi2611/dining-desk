@@ -29,6 +29,17 @@ describe("WalletService.requestOffline", () => {
     expect(world.store.createRechargeRequest).not.toHaveBeenCalled();
   });
 
+  it("refuses an offline request below the minimum recharge and never calls the gateway", async () => {
+    const { world, service } = setup();
+
+    await expect(service.requestOffline(1, 49900, "slip-low")).rejects.toMatchObject({
+      code: "BELOW_MINIMUM",
+    });
+
+    expect(world.offlineGateway.charge).not.toHaveBeenCalled();
+    expect(world.store.createRechargeRequest).not.toHaveBeenCalled();
+  });
+
   it("refuses a 2nd offline request on the same Dhaka day", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-11-26T04:00:00Z")); // 10:00 in Dhaka
