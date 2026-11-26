@@ -36,11 +36,19 @@ async function main() {
       role: u.role,
       hallId: halls[u.hall],
     };
-    await prisma.user.upsert({
+    const user = await prisma.user.upsert({
       where: { roll: u.roll },
       update: data,
       create: { roll: u.roll, ...data },
     });
+    // Every student gets a wallet. DEMO ONLY: Tk 1000 to start (in poisha). Re-seeding keeps the balance.
+    if (u.role === "STUDENT") {
+      await prisma.wallet.upsert({
+        where: { userId: user.id },
+        update: {},
+        create: { userId: user.id, balance: 100000 },
+      });
+    }
   }
 }
 

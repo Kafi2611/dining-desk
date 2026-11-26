@@ -27,6 +27,11 @@ model User {
   role         Role
   hallId       Int
   hall         Hall   @relation(fields: [hallId], references: [id])
+
+  wallet           Wallet?
+  rechargeRequests RechargeRequest[] @relation("RequestOwner")
+  decidedRequests  RechargeRequest[] @relation("RequestDecider")
+  notifications    Notification[]
 }
 
 // One row only (id = 1). Money is stored in whole poisha: Tk 40 = 4000.
@@ -38,4 +43,76 @@ model Settings {
   guestDailyLimit Int    @default(10)
   minRecharge     Int    @default(50000)
   lowBalanceAt    Int    @default(8000)
+}
+
+enum TransactionType {
+  RECHARGE
+  MEAL_PURCHASE
+  GUEST_PURCHASE
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum TransactionMethod {
+  WALLET
+  BKASH
+  OFFLINE
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REJECTED
+}
+
+enum RechargeStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// balance is in poisha and must never go below 0.
+model Wallet {
+  id           Int           @id @default(autoincrement())
+  userId       Int           @unique
+  user         User          @relation(fields: [userId], references: [id])
+  balance      Int           @default(0)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id           Int               @id @default(autoincrement())
+  walletId     Int
+  wallet       Wallet            @relation(fields: [walletId], references: [id])
+  type         TransactionType
+  method       TransactionMethod
+  amount       Int
+  status       TransactionStatus
+  balanceAfter Int
+  note         String?
+  createdAt    DateTime          @default(now())
+}
+
+model RechargeRequest {
+  id          Int            @id @default(autoincrement())
+  userId      Int
+  user        User           @relation("RequestOwner", fields: [userId], references: [id])
+  amount      Int
+  method      TransactionMethod
+  reference   String
+  status      RechargeStatus @default(PENDING)
+  decidedById Int?
+  decidedBy   User?          @relation("RequestDecider", fields: [decidedById], references: [id])
+  decidedAt   DateTime?
+  createdAt   DateTime       @default(now())
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  title     String
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
 }
