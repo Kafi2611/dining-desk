@@ -62,6 +62,10 @@ export class WalletService {
   // FR4: 1 offline request per student per Dhaka day. The manager decides later.
   async requestOffline(userId: number, amount: number, reference: string): Promise<void> {
     assertValidAmount(amount);
+    const settings = await this.deps.settings.get();
+    if (amount < settings.minRecharge) {
+      throw new WalletError("BELOW_MINIMUM", "The minimum recharge is Tk 500");
+    }
     const { start, end } = dhakaDayRange(new Date());
     await this.deps.wallets.transaction(async (tx) => {
       const already = await tx.countRechargeRequests(userId, "OFFLINE", start, end);
