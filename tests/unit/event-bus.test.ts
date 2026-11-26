@@ -27,4 +27,18 @@ describe("EventBus", () => {
 
     expect(other.handle).not.toHaveBeenCalled();
   });
+
+  it("keeps going when one listener fails, and does not throw", async () => {
+    const onError = vi.fn();
+    const bus = new EventBus(onError);
+    const broken = { handle: vi.fn().mockRejectedValue(new Error("sms down")) };
+    const healthy = { handle: vi.fn() };
+    bus.subscribe("RechargeApproved", broken);
+    bus.subscribe("RechargeApproved", healthy);
+
+    await expect(bus.publish(approved)).resolves.toBeUndefined();
+
+    expect(healthy.handle).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
 });
