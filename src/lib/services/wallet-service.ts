@@ -132,11 +132,19 @@ export class WalletService {
   ): Promise<void> {
     const sender = (await this.deps.users.findById(senderId))!;
     const recipient = (await this.deps.users.findByRoll(recipientRoll))!;
-    await this.deps.hasher.compare(password, sender.passwordHash);
+    if (!(await this.deps.hasher.compare(password, sender.passwordHash))) {
+      throw new WalletError("WRONG_PASSWORD", "Wrong password");
+    }
+    if (recipient.hallId !== sender.hallId) {
+      throw new WalletError("DIFFERENT_HALL", "You can send money only to a student of your hall");
+    }
 
     await this.deps.wallets.transaction(async (tx) => {
       const from = (await tx.getWalletByUserId(sender.id))!;
       const to = (await tx.getWalletByUserId(recipient.id))!;
+      if (from.balance < amount) {
+        throw new WalletError("INSUFFICIENT_BALANCE", "Not enough balance");
+      }
       const fromAfter = await tx.debit(from.id, amount);
       const toAfter = await tx.credit(to.id, amount);
       await tx.addTransaction({
