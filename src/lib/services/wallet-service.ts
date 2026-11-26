@@ -25,5 +25,28 @@ export class WalletService {
     if (amount < settings.minRecharge) {
       throw new WalletError("BELOW_MINIMUM", "The minimum recharge is Tk 500");
     }
+
+    // The network call to bKash happens outside the database transaction.
+    const result = await this.deps.onlineGateway.charge(amount, `recharge-${userId}-${Date.now()}`);
+    const paid = result.status === "SUCCESS";
+
+    await this.deps.wallets.transaction(async (tx) => {
+      const wallet = await tx.getWalletByUserId(userId);
+      if (!wallet) throw new WalletError("NO_WALLET", "Wallet not found");
+      const balanceAfter = paid ? await tx.credit(wallet.id, amount) : wallet.balance;
+      await tx.addTransaction({
+        walletId: wallet.id,
+        type: "RECHARGE",
+        method: "BKASH",
+        amount,
+        status: paid ? "COMPLETED" : "FAILED",
+        balanceAfter,
+        note: result.reference ?? result.message,
+      });
+    });
+
+    if (!paid) {
+      throw new WalletError("PAYMENT_FAILED", "bKash payment failed. No money was taken");
+    }
   }
 }
