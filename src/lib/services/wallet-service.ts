@@ -1,4 +1,5 @@
 import type { EventBus } from "@/lib/patterns/events/event-bus";
+import type { DiningEvent } from "@/lib/patterns/events/events";
 import type { PaymentGateway } from "@/lib/patterns/payment/payment-gateway";
 import type { SettingsRepository } from "@/lib/repositories/settings-repository";
 import type { UserLookup } from "@/lib/repositories/user-repository";
@@ -91,7 +92,7 @@ export class WalletService {
       await tx.decideRechargeRequest(requestId, "APPROVED", managerId, new Date());
       return req;
     });
-    await this.deps.events.publish({
+    await this.notify({
       type: "RechargeApproved",
       userId: request.userId,
       amount: request.amount,
@@ -115,11 +116,20 @@ export class WalletService {
       await tx.decideRechargeRequest(requestId, "REJECTED", managerId, new Date());
       return req;
     });
-    await this.deps.events.publish({
+    await this.notify({
       type: "RechargeRejected",
       userId: request.userId,
       amount: request.amount,
     });
+  }
+
+  // Events are sent after the money has moved. A broken notification must never undo or hide that.
+  private async notify(event: DiningEvent): Promise<void> {
+    try {
+      await this.deps.events.publish(event);
+    } catch (e) {
+      console.error("Could not publish event:", e);
+    }
   }
 
   private async findPending(tx: WalletStore, requestId: number) {
