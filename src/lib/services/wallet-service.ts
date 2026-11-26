@@ -123,6 +123,50 @@ export class WalletService {
     });
   }
 
+  // FR5: send money to a student of the same hall. Debit + credit + records are all-or-nothing.
+  async transfer(
+    senderId: number,
+    recipientRoll: string,
+    amount: number,
+    password: string,
+  ): Promise<void> {
+    const sender = (await this.deps.users.findById(senderId))!;
+    const recipient = (await this.deps.users.findByRoll(recipientRoll))!;
+    await this.deps.hasher.compare(password, sender.passwordHash);
+
+    await this.deps.wallets.transaction(async (tx) => {
+      const from = (await tx.getWalletByUserId(sender.id))!;
+      const to = (await tx.getWalletByUserId(recipient.id))!;
+      const fromAfter = await tx.debit(from.id, amount);
+      const toAfter = await tx.credit(to.id, amount);
+      await tx.addTransaction({
+        walletId: from.id,
+        type: "TRANSFER_OUT",
+        method: "WALLET",
+        amount,
+        status: "COMPLETED",
+        balanceAfter: fromAfter,
+        note: `To ${recipient.roll}`,
+      });
+      await tx.addTransaction({
+        walletId: to.id,
+        type: "TRANSFER_IN",
+        method: "WALLET",
+        amount,
+        status: "COMPLETED",
+        balanceAfter: toAfter,
+        note: `From ${sender.roll}`,
+      });
+    });
+
+    await this.notify({
+      type: "MoneyReceived",
+      userId: recipient.id,
+      amount,
+      fromName: sender.name,
+    });
+  }
+
   // Events are sent after the money has moved. A broken notification must never undo or hide that.
   private async notify(event: DiningEvent): Promise<void> {
     try {
