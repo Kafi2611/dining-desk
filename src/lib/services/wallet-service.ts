@@ -24,12 +24,6 @@ function assertValidAmount(amount: number): void {
   }
 }
 
-function assertValidAmount(amount: number): void {
-  if (!Number.isInteger(amount) || amount <= 0) {
-    throw new WalletError("INVALID_AMOUNT", "Amount must be a positive whole number of poisha");
-  }
-}
-
 // All wallet rules live here. Amounts are whole poisha (Tk 40 = 4000).
 export class WalletService {
   constructor(private readonly deps: WalletServiceDeps) {}
