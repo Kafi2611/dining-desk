@@ -1,20 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { WalletService } from "@/lib/services/wallet-service";
-import { makeWalletWorld } from "./helpers/wallet-world";
-
-function setup() {
-  const world = makeWalletWorld();
-  const service = new WalletService({
-    wallets: world.wallets,
-    users: world.users,
-    settings: world.settings,
-    hasher: world.hasher,
-    onlineGateway: world.onlineGateway,
-    offlineGateway: world.offlineGateway,
-    events: world.events,
-  });
-  return { world, service };
-}
+import { setupWalletService as setup } from "./helpers/wallet-world";
 
 describe("WalletService.rechargeOnline", () => {
   it("refuses Tk 499 (below the minimum of Tk 500) and never calls bKash", async () => {

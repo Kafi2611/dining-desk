@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 import { WalletError } from "@/lib/services/wallet-errors";
+import { WalletService } from "@/lib/services/wallet-service";
 import type {
   NewTransaction,
   RechargeRequestRecord,
@@ -123,4 +124,19 @@ export function makeWalletWorld(balances: Record<number, number> = { 1: 100000, 
     offlineGateway: { charge: vi.fn().mockResolvedValue({ status: "PENDING", reference: "slip-1" }) },
     events: { publish: vi.fn().mockResolvedValue(undefined) },
   };
+}
+
+// The service wired to the fake world. Tests can still change any mock afterwards.
+export function setupWalletService(balances?: Record<number, number>) {
+  const world = makeWalletWorld(balances);
+  const service = new WalletService({
+    wallets: world.wallets,
+    users: world.users,
+    settings: world.settings,
+    hasher: world.hasher,
+    onlineGateway: world.onlineGateway,
+    offlineGateway: world.offlineGateway,
+    events: world.events,
+  });
+  return { world, service };
 }
