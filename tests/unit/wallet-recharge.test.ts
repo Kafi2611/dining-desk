@@ -13,6 +13,16 @@ describe("WalletService.rechargeOnline", () => {
     expect(world.balanceOf(1)).toBe(100000);
   });
 
+  it("builds the minimum message from settings.minRecharge", async () => {
+    const { world, service } = setup();
+    world.settings.get.mockResolvedValue({ ...(await world.settings.get()), minRecharge: 70000 });
+
+    await expect(service.rechargeOnline(1, 60000)).rejects.toThrow("The minimum recharge is Tk 700");
+    await expect(service.requestOffline(1, 60000, "slip")).rejects.toThrow(
+      "The minimum recharge is Tk 700",
+    );
+  });
+
   it("refuses an amount that is not a whole number of poisha", async () => {
     const { world, service } = setup();
 

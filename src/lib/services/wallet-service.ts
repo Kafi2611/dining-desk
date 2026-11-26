@@ -24,6 +24,11 @@ function assertValidAmount(amount: number): void {
   }
 }
 
+// The minimum comes from Settings (in poisha), so the message is built from it.
+function minRechargeMessage(minRecharge: number): string {
+  return `The minimum recharge is Tk ${minRecharge / 100}`;
+}
+
 // All wallet rules live here. Amounts are whole poisha (Tk 40 = 4000).
 export class WalletService {
   constructor(private readonly deps: WalletServiceDeps) {}
@@ -32,7 +37,7 @@ export class WalletService {
     assertValidAmount(amount);
     const settings = await this.deps.settings.get();
     if (amount < settings.minRecharge) {
-      throw new WalletError("BELOW_MINIMUM", "The minimum recharge is Tk 500");
+      throw new WalletError("BELOW_MINIMUM", minRechargeMessage(settings.minRecharge));
     }
 
     // The network call to bKash happens outside the database transaction.
@@ -64,7 +69,7 @@ export class WalletService {
     assertValidAmount(amount);
     const settings = await this.deps.settings.get();
     if (amount < settings.minRecharge) {
-      throw new WalletError("BELOW_MINIMUM", "The minimum recharge is Tk 500");
+      throw new WalletError("BELOW_MINIMUM", minRechargeMessage(settings.minRecharge));
     }
     const { start, end } = dhakaDayRange(new Date());
     await this.deps.wallets.transaction(async (tx) => {
