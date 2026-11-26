@@ -18,11 +18,24 @@ export interface WalletServiceDeps {
   events: Pick<EventBus, "publish">;
 }
 
+function assertValidAmount(amount: number): void {
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new WalletError("INVALID_AMOUNT", "Amount must be a positive whole number of poisha");
+  }
+}
+
+function assertValidAmount(amount: number): void {
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new WalletError("INVALID_AMOUNT", "Amount must be a positive whole number of poisha");
+  }
+}
+
 // All wallet rules live here. Amounts are whole poisha (Tk 40 = 4000).
 export class WalletService {
   constructor(private readonly deps: WalletServiceDeps) {}
 
   async rechargeOnline(userId: number, amount: number): Promise<void> {
+    assertValidAmount(amount);
     const settings = await this.deps.settings.get();
     if (amount < settings.minRecharge) {
       throw new WalletError("BELOW_MINIMUM", "The minimum recharge is Tk 500");
@@ -54,6 +67,7 @@ export class WalletService {
 
   // FR4: 1 offline request per student per Dhaka day. The manager decides later.
   async requestOffline(userId: number, amount: number, reference: string): Promise<void> {
+    assertValidAmount(amount);
     const { start, end } = dhakaDayRange(new Date());
     await this.deps.wallets.transaction(async (tx) => {
       const already = await tx.countRechargeRequests(userId, "OFFLINE", start, end);
@@ -130,9 +144,7 @@ export class WalletService {
     amount: number,
     password: string,
   ): Promise<void> {
-    if (!Number.isInteger(amount) || amount <= 0) {
-      throw new WalletError("INVALID_AMOUNT", "Amount must be a positive whole number of poisha");
-    }
+    assertValidAmount(amount);
     const sender = await this.deps.users.findById(senderId);
     if (!sender) throw new WalletError("NO_WALLET", "Sender not found");
     const recipient = await this.deps.users.findByRoll(recipientRoll);
