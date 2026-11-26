@@ -19,6 +19,16 @@ describe("WalletService.requestOffline", () => {
     expect(world.balanceOf(1)).toBe(100000);
   });
 
+  it.each([0, -100, 500.5])("refuses the invalid amount %s", async (amount) => {
+    const { world, service } = setup();
+
+    await expect(service.requestOffline(1, amount, "slip-x")).rejects.toMatchObject({
+      code: "INVALID_AMOUNT",
+    });
+
+    expect(world.store.createRechargeRequest).not.toHaveBeenCalled();
+  });
+
   it("refuses a 2nd offline request on the same Dhaka day", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-11-26T04:00:00Z")); // 10:00 in Dhaka

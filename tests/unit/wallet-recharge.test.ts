@@ -13,6 +13,16 @@ describe("WalletService.rechargeOnline", () => {
     expect(world.balanceOf(1)).toBe(100000);
   });
 
+  it("refuses an amount that is not a whole number of poisha", async () => {
+    const { world, service } = setup();
+
+    await expect(service.rechargeOnline(1, 50000.5)).rejects.toMatchObject({
+      code: "INVALID_AMOUNT",
+    });
+
+    expect(world.onlineGateway.charge).not.toHaveBeenCalled();
+  });
+
   it("accepts exactly Tk 500: charges the gateway, adds the money, records it", async () => {
     const { world, service } = setup();
 
