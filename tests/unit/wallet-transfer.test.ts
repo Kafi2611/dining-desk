@@ -77,6 +77,29 @@ describe("WalletService.transfer", () => {
     expect(world.balanceOf(2)).toBe(100000);
   });
 
+  it.each([0, -500, 10.5])("refuses the invalid amount %s", async (amount) => {
+    const { world, service } = setupWalletService();
+
+    await expect(service.transfer(1, "2203002", amount, "secret")).rejects.toMatchObject({
+      code: "INVALID_AMOUNT",
+    });
+
+    expect(world.wallets.transaction).not.toHaveBeenCalled();
+  });
+
+  it("refuses an unknown roll and refuses sending money to yourself", async () => {
+    const { world, service } = setupWalletService();
+
+    await expect(service.transfer(1, "0000000", 10000, "secret")).rejects.toMatchObject({
+      code: "RECIPIENT_NOT_FOUND",
+    });
+    await expect(service.transfer(1, "2203001", 10000, "secret")).rejects.toMatchObject({
+      code: "SELF_TRANSFER",
+    });
+
+    expect(world.wallets.transaction).not.toHaveBeenCalled();
+  });
+
   it("rolls the debit back when the credit fails (all or nothing)", async () => {
     const { world, service } = setupWalletService();
     vi.mocked(world.store.credit).mockRejectedValueOnce(new Error("database went away"));
