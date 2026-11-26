@@ -130,8 +130,18 @@ export class WalletService {
     amount: number,
     password: string,
   ): Promise<void> {
-    const sender = (await this.deps.users.findById(senderId))!;
-    const recipient = (await this.deps.users.findByRoll(recipientRoll))!;
+    if (!Number.isInteger(amount) || amount <= 0) {
+      throw new WalletError("INVALID_AMOUNT", "Amount must be a positive whole number of poisha");
+    }
+    const sender = await this.deps.users.findById(senderId);
+    if (!sender) throw new WalletError("NO_WALLET", "Sender not found");
+    const recipient = await this.deps.users.findByRoll(recipientRoll);
+    if (!recipient || recipient.role !== "STUDENT") {
+      throw new WalletError("RECIPIENT_NOT_FOUND", "No student with this roll");
+    }
+    if (recipient.id === sender.id) {
+      throw new WalletError("SELF_TRANSFER", "You cannot send money to yourself");
+    }
     if (!(await this.deps.hasher.compare(password, sender.passwordHash))) {
       throw new WalletError("WRONG_PASSWORD", "Wrong password");
     }
