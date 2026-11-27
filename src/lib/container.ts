@@ -8,16 +8,19 @@ import { BkashClient } from "@/lib/patterns/payment/bkash-client";
 import { OfflineGateway } from "@/lib/patterns/payment/offline-gateway";
 import { GuestCouponSeller } from "@/lib/patterns/token-seller/guest-coupon-seller";
 import { RegularTokenSeller } from "@/lib/patterns/token-seller/regular-token-seller";
+import { PrismaHistoryRepository } from "@/lib/repositories/prisma-history-repository";
 import { PrismaNotificationRepository } from "@/lib/repositories/prisma-notification-repository";
 import { PrismaSettingsRepository } from "@/lib/repositories/prisma-settings-repository";
 import { PrismaTokenRepository } from "@/lib/repositories/prisma-token-repository";
 import { PrismaUserRepository } from "@/lib/repositories/prisma-user-repository";
 import { PrismaWalletRepository } from "@/lib/repositories/prisma-wallet-repository";
+import { HistoryService } from "@/lib/services/history-service";
 import { TokenService } from "@/lib/services/token-service";
 import { WalletService } from "@/lib/services/wallet-service";
 
 export const notificationRepository = new PrismaNotificationRepository();
 export const walletRepository = new PrismaWalletRepository();
+export const historyService = new HistoryService(new PrismaHistoryRepository());
 
 const eventBus = new EventBus();
 const inApp = new InAppNotifier(notificationRepository);

@@ -38,6 +38,15 @@ One section per PR. Fill in after each PR is done.
 - **Tests:** `bkash-adapter`, `offline-gateway`, `event-bus`, `in-app-notifier`, `sms-notifier`, `dhaka-time`, `wallet-recharge`, `wallet-offline`, `wallet-decision`, `wallet-transfer` in `tests/unit/`. 44 tests pass in total. Mocks: repository, gateway, hasher, event bus (`vi.fn()`), clock (`vi.setSystemTime`). Each rule has a `test:` commit before its `feat:` commit.
 - **What to say in the viva:** `WalletService` only knows `PaymentGateway`, never bKash, so a new payment method is one new adapter class. Services only publish events, so a new channel is one new listener. A transfer runs in one `prisma.$transaction`; the test shows the debit is undone if the credit fails. The debit uses `balance >= amount` in the database, so the balance cannot go below 0.
 
+## PR 5: feature/transaction-history
+
+- **PR / branch:** PR 5, `feature/transaction-history` (FR9)
+- **What was built:** `HistoryService.list` filters wallet transactions by type, status and date range (Asia/Dhaka days). A wrong range (from after to) is refused. Newest first. Student page `/student/history` with 3 filters (type, status, from/to date). Schema: an index on `Transaction(walletId, createdAt)` and a `HistorySort` enum added at the END of `schema.prisma`.
+- **Main files:** `src/lib/services/history-service.ts`, `src/lib/repositories/history-repository.ts`, `src/lib/repositories/prisma-history-repository.ts`, `src/lib/validators/history.ts`, `src/app/student/history/page.tsx`
+- **Pattern (if any):** none
+- **Tests:** `tests/unit/history-filter.test.ts` (type, status, Dhaka date range, only from / only to, wrong range, newest first). The `test:` commits come before the `feat:` commits.
+- **What to say in the viva:** The service turns the dates into Dhaka day boundaries and passes a query to the repository, so tests use a mock. The page only reads the filters, validates them with Zod and calls the service. The schema change at the end of the file is the one that conflicts with PR 4.
+
 ## PR 4: feature/meal-tokens
 
 - **PR / branch:** PR 4, `feature/meal-tokens` (FR6, FR7, FR8)

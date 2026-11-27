@@ -93,6 +93,8 @@ model Transaction {
   balanceAfter Int
   note         String?
   createdAt    DateTime          @default(now())
+
+  @@index([walletId, createdAt])
 }
 
 model RechargeRequest {
@@ -141,4 +143,10 @@ model MealToken {
   createdAt DateTime  @default(now())
 
   @@unique([userId, date, kind])
+}
+
+// Order of the history list (FR9). Newest first is the default.
+enum HistorySort {
+  NEWEST
+  OLDEST
 }

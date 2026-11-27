@@ -15,6 +15,9 @@ export default async function StudentDashboard() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold">My wallet</h1>
+      <Link href="/student/history" className="underline">
+        History
+      </Link>
       <p className="text-xl">
         Balance: <span data-testid="balance">{formatTaka(wallet?.balance ?? 0)}</span>
       </p>
