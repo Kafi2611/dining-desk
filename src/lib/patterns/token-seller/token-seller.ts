@@ -1,0 +1,53 @@
+// Pattern: Factory Method (creational).
+// GoF role: TokenSeller is the abstract Creator. sell() is the shared steps; createToken() is the factory method.
+import type { MealToken, TokenInput } from "@/lib/patterns/token-seller/meal-token";
+import type { SettingsRepository } from "@/lib/repositories/settings-repository";
+import type { TokenRepository } from "@/lib/repositories/token-repository";
+import type { UserLookup } from "@/lib/repositories/user-repository";
+import { TokenError } from "@/lib/services/token-errors";
+
+export interface TokenSellerDeps {
+  tokens: TokenRepository;
+  users: UserLookup;
+  settings: SettingsRepository;
+}
+
+export interface SaleResult {
+  token: MealToken;
+  price: number; // poisha
+  balanceAfter: number; // poisha
+}
+
+export abstract class TokenSeller {
+  constructor(protected readonly deps: TokenSellerDeps) {}
+
+  // The shared steps. Subclasses only choose which product to create.
+  async sell(request: TokenInput): Promise<SaleResult> {
+    const settings = await this.deps.settings.get();
+
+    return this.deps.tokens.transaction(async (tx) => {
+      const token = this.createToken(request);
+      const price = token.price(settings);
+
+      const wallet = await tx.getWalletByUserId(request.userId);
+      if (!wallet) throw new TokenError("NO_WALLET", "Wallet not found");
+      const balanceAfter = await tx.debit(wallet.id, price);
+
+      await tx.addTransaction({
+        walletId: wallet.id,
+        type: token.transactionType,
+        method: "WALLET",
+        amount: price,
+        status: "COMPLETED",
+        balanceAfter,
+        note: `${request.mealType} for ${request.date}`,
+      });
+      await tx.addToken(token.toRecord(settings));
+
+      return { token, price, balanceAfter };
+    });
+  }
+
+  // The factory method: each subclass decides which product it makes.
+  protected abstract createToken(input: TokenInput): MealToken;
+}
