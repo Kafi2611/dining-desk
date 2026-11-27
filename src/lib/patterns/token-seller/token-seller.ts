@@ -35,6 +35,9 @@ export abstract class TokenSeller {
 
     return this.deps.tokens.transaction(async (tx) => {
       const token = this.createToken(request);
+      if (await tx.findToken(request.userId, request.date, token.kind)) {
+        throw new TokenError("ALREADY_BOUGHT", "You already have this kind of token for that date");
+      }
       const price = token.price(settings);
 
       const wallet = await tx.getWalletByUserId(request.userId);
