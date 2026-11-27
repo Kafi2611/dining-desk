@@ -4,7 +4,7 @@ import type { MealToken, TokenInput } from "@/lib/patterns/token-seller/meal-tok
 import type { SettingsRepository } from "@/lib/repositories/settings-repository";
 import type { TokenRepository } from "@/lib/repositories/token-repository";
 import type { UserLookup } from "@/lib/repositories/user-repository";
-import { isAtOrAfterDhakaTime } from "@/lib/services/dhaka-time";
+import { dhakaTomorrow, isAtOrAfterDhakaTime } from "@/lib/services/dhaka-time";
 import { TokenError } from "@/lib/services/token-errors";
 
 export interface TokenSellerDeps {
@@ -25,8 +25,12 @@ export abstract class TokenSeller {
   // The shared steps. Subclasses only choose which product to create.
   async sell(request: TokenInput): Promise<SaleResult> {
     const settings = await this.deps.settings.get();
-    if (isAtOrAfterDhakaTime(new Date(), settings.cutoffTime)) {
+    const now = new Date();
+    if (isAtOrAfterDhakaTime(now, settings.cutoffTime)) {
       throw new TokenError("AFTER_CUTOFF", `Tokens are sold only until ${settings.cutoffTime}`);
+    }
+    if (request.date !== dhakaTomorrow(now)) {
+      throw new TokenError("NOT_TOMORROW", "You can buy a token only for tomorrow");
     }
 
     return this.deps.tokens.transaction(async (tx) => {
