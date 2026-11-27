@@ -40,11 +40,11 @@ export function makeTokenWorld(balances?: Record<number, number>) {
 
   const repository: TokenRepository = {
     ...store,
-    transaction: vi.fn(async (fn) => {
+    transaction: vi.fn(async <T>(fn: (tx: TokenStore) => Promise<T>): Promise<T> => {
       const saved = [...tokens];
       try {
         // The wallet fake undoes balances and transaction rows by itself.
-        return await wallet.wallets.transaction(() => fn(store));
+        return await wallet.wallets.transaction<T>(() => fn(store));
       } catch (e) {
         tokens.splice(0, tokens.length, ...saved);
         throw e;
