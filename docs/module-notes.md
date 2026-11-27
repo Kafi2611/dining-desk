@@ -28,3 +28,12 @@ One section per PR. Fill in after each PR is done.
 - **Pattern (if any):** none
 - **Tests:** `tests/unit/auth-service.test.ts` (right password OK, wrong password refused) and `tests/unit/authorization.test.ts` (student blocked from manager action). Each rule has a `test:` commit before its `feat:` commit.
 - **What to say in the viva:** Rules are in `AuthService` and `assertRole`, not in the page. The repository and the password checker are passed in, so tests use mocks. The role layouts call `assertRole` and redirect.
+
+## PR 3: feature/wallet
+
+- **PR / branch:** PR 3, `feature/wallet` (FR3, FR4 service part, FR5, FR12)
+- **What was built:** `Wallet`, `Transaction`, `RechargeRequest`, `Notification` models. Every student gets a wallet in the seed (demo Tk 1000). `WalletService`: online recharge (min Tk 500), 1 offline request per day, approve / reject, transfer to the same hall with a password check. Student page with balance and 3 forms, and a bell in the layout. The manager screen for approve / reject comes later.
+- **Main files:** `src/lib/services/wallet-service.ts`, `src/lib/patterns/payment/*`, `src/lib/patterns/events/*`, `src/lib/repositories/prisma-wallet-repository.ts`, `src/lib/container.ts`, `src/lib/actions/wallet.ts`, `src/app/student/`, `src/components/notification-bell.tsx`
+- **Pattern (if any):** Adapter (`BkashAdapter` wraps the fake `BkashClient`; `OfflineGateway`; client is `WalletService`). Observer (`EventBus` is the subject; `InAppNotifier` and `SmsNotifier` are the observers).
+- **Tests:** `bkash-adapter`, `offline-gateway`, `event-bus`, `in-app-notifier`, `sms-notifier`, `dhaka-time`, `wallet-recharge`, `wallet-offline`, `wallet-decision`, `wallet-transfer` in `tests/unit/`. 44 tests pass in total. Mocks: repository, gateway, hasher, event bus (`vi.fn()`), clock (`vi.setSystemTime`). Each rule has a `test:` commit before its `feat:` commit.
+- **What to say in the viva:** `WalletService` only knows `PaymentGateway`, never bKash, so a new payment method is one new adapter class. Services only publish events, so a new channel is one new listener. A transfer runs in one `prisma.$transaction`; the test shows the debit is undone if the credit fails. The debit uses `balance >= amount` in the database, so the balance cannot go below 0.
