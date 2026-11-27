@@ -46,6 +46,9 @@ export class ManagerService {
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(data.cutoffTime)) {
       throw new SettingsError("INVALID_CUTOFF", "Cutoff time must look like 23:00 (HH:MM, 24-hour)");
     }
+    if (!Number.isInteger(data.guestDailyLimit) || data.guestDailyLimit < 1) {
+      throw new SettingsError("INVALID_GUEST_LIMIT", "Guest limit must be a whole number, at least 1");
+    }
     return this.deps.settings.update(data);
   }
 }
