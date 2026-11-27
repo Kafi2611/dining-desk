@@ -50,6 +50,23 @@ describe("ManagerService.updateSettings (FR10)", () => {
     expect(settings.update).not.toHaveBeenCalled();
   });
 
+  it.each([0, -1, 2.5, Number.NaN])("refuses the guest limit %s", async (guestDailyLimit) => {
+    const { settings, service } = setup();
+
+    await expect(service.updateSettings({ ...VALID, guestDailyLimit })).rejects.toMatchObject({
+      code: "INVALID_GUEST_LIMIT",
+    });
+    expect(settings.update).not.toHaveBeenCalled();
+  });
+
+  it("accepts a guest limit of 1", async () => {
+    const { settings, service } = setup();
+
+    await service.updateSettings({ ...VALID, guestDailyLimit: 1 });
+
+    expect(settings.update).toHaveBeenCalledWith({ ...VALID, guestDailyLimit: 1 });
+  });
+
   it.each(["00:00", "09:05", "23:59"])("accepts the cutoff %s", async (cutoffTime) => {
     const { settings, service } = setup();
 
