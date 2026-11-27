@@ -49,7 +49,7 @@ export function makeTokenWorld(balances?: Record<number, number>) {
         tokens.splice(0, tokens.length, ...saved);
         throw e;
       }
-    }),
+    }) as TokenRepository["transaction"],
   };
 
   return {
