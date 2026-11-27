@@ -1,6 +1,11 @@
 import type { MealCountRepository } from "@/lib/repositories/meal-count-repository";
-import type { SettingsAdmin } from "@/lib/repositories/settings-repository";
+import type {
+  SettingsAdmin,
+  SettingsRecord,
+  SettingsUpdate,
+} from "@/lib/repositories/settings-repository";
 import { dhakaTomorrow } from "@/lib/services/dhaka-time";
+import { SettingsError } from "@/lib/services/settings-errors";
 
 export interface ManagerServiceDeps {
   counts: MealCountRepository;
@@ -32,5 +37,19 @@ export class ManagerService {
       }
     }
     return result;
+  }
+
+  // FR10: the 4 values the manager can change. Every rule is checked before anything is saved.
+  async updateSettings(data: SettingsUpdate): Promise<SettingsRecord> {
+    assertValidRate(data.mealRate, "Meal rate");
+    assertValidRate(data.guestRate, "Guest rate");
+    return this.deps.settings.update(data);
+  }
+}
+
+// Rates are whole poisha and must be more than 0.
+function assertValidRate(rate: number, label: string): void {
+  if (!Number.isInteger(rate) || rate <= 0) {
+    throw new SettingsError("INVALID_RATE", `${label} must be more than 0`);
   }
 }
