@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { setupSellers, TOMORROW, useFakeClock } from "./helpers/seller-setup";
+import { setupSellers, TOMORROW, installFakeClock } from "./helpers/seller-setup";
 
-useFakeClock();
+installFakeClock();
 
 describe("FR6: a token is sold only if the balance is enough", () => {
   it("balance = price: OK, and the balance becomes 0", async () => {

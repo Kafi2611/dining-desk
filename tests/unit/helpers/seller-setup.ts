@@ -7,7 +7,7 @@ import { makeTokenWorld } from "./token-world";
 export const NOW_DHAKA_16_00 = new Date("2026-11-27T10:00:00Z");
 export const TOMORROW = "2026-11-28";
 
-export function useFakeClock(now: Date = NOW_DHAKA_16_00) {
+export function installFakeClock(now: Date = NOW_DHAKA_16_00) {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(now);

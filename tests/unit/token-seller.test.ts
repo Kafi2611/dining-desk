@@ -3,10 +3,9 @@ import { GuestCoupon } from "@/lib/patterns/token-seller/guest-coupon";
 import { MealToken } from "@/lib/patterns/token-seller/meal-token";
 import { RegularToken } from "@/lib/patterns/token-seller/regular-token";
 import { TokenSeller } from "@/lib/patterns/token-seller/token-seller";
-import type { SettingsRecord } from "@/lib/repositories/settings-repository";
-import { setupSellers, TOMORROW, useFakeClock } from "./helpers/seller-setup";
+import { setupSellers, TOMORROW, installFakeClock } from "./helpers/seller-setup";
 
-useFakeClock();
+installFakeClock();
 
 describe("Factory Method: each seller creates the right product", () => {
   it("RegularTokenSeller sells a RegularToken", async () => {
@@ -30,7 +29,7 @@ describe("Factory Method: each seller creates the right product", () => {
     class FestToken extends MealToken {
       readonly kind = "GUEST" as const;
       readonly transactionType = "GUEST_PURCHASE" as const;
-      price(_settings: SettingsRecord) {
+      price() {
         return 1234;
       }
     }

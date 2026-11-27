@@ -75,6 +75,7 @@ export abstract class TokenSeller {
   }
 
   // Hook: a subclass can add its own rules. By default there are none.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   protected async checkExtraRules(_context: SaleContext): Promise<void> {}
 
   // The factory method: each subclass decides which product it makes.

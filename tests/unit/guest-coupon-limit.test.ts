@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { setupSellers, TOMORROW, useFakeClock } from "./helpers/seller-setup";
+import { setupSellers, TOMORROW, installFakeClock } from "./helpers/seller-setup";
 
-useFakeClock();
+installFakeClock();
 
 describe("FR8: guest coupons are limited per day for the whole hall", () => {
   it("the 10th coupon of the day is OK", async () => {

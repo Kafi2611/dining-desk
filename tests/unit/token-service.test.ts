@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
 import type { TokenSeller } from "@/lib/patterns/token-seller/token-seller";
 import { TokenService } from "@/lib/services/token-service";
-import { setupSellers, TOMORROW, useFakeClock } from "./helpers/seller-setup";
+import { setupSellers, TOMORROW, installFakeClock } from "./helpers/seller-setup";
 
-useFakeClock();
+installFakeClock();
 
 function setupService(balances?: Record<number, number>) {
   const { world, regular, guest } = setupSellers(balances);

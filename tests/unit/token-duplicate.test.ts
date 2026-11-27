@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { setupSellers, TOMORROW, useFakeClock } from "./helpers/seller-setup";
+import { setupSellers, TOMORROW, installFakeClock } from "./helpers/seller-setup";
 
-useFakeClock();
+installFakeClock();
 
 describe("FR7: 1 regular token per student per date", () => {
   it("a 2nd regular token for the same date is refused and costs nothing", async () => {

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { setupSellers, TOMORROW, useFakeClock } from "./helpers/seller-setup";
+import { setupSellers, TOMORROW, installFakeClock } from "./helpers/seller-setup";
 
 describe("FR6: the meal date must be tomorrow", () => {
-  useFakeClock(); // 16:00 on Nov 27 in Dhaka
+  installFakeClock(); // 16:00 on Nov 27 in Dhaka
 
   it("today is refused", async () => {
     const { regular, world } = setupSellers();
