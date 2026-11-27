@@ -9,12 +9,15 @@ import { OfflineGateway } from "@/lib/patterns/payment/offline-gateway";
 import { GuestCouponSeller } from "@/lib/patterns/token-seller/guest-coupon-seller";
 import { RegularTokenSeller } from "@/lib/patterns/token-seller/regular-token-seller";
 import { PrismaHistoryRepository } from "@/lib/repositories/prisma-history-repository";
+import { PrismaMealCountRepository } from "@/lib/repositories/prisma-meal-count-repository";
 import { PrismaNotificationRepository } from "@/lib/repositories/prisma-notification-repository";
+import { PrismaPendingRequestRepository } from "@/lib/repositories/prisma-pending-request-repository";
 import { PrismaSettingsRepository } from "@/lib/repositories/prisma-settings-repository";
 import { PrismaTokenRepository } from "@/lib/repositories/prisma-token-repository";
 import { PrismaUserRepository } from "@/lib/repositories/prisma-user-repository";
 import { PrismaWalletRepository } from "@/lib/repositories/prisma-wallet-repository";
 import { HistoryService } from "@/lib/services/history-service";
+import { ManagerService } from "@/lib/services/manager-service";
 import { TokenService } from "@/lib/services/token-service";
 import { WalletService } from "@/lib/services/wallet-service";
 
@@ -42,6 +45,12 @@ export const walletService = new WalletService({
   offlineGateway: new OfflineGateway(),
   events: eventBus,
 });
+
+export const managerService = new ManagerService({
+  counts: new PrismaMealCountRepository(),
+  settings,
+});
+export const pendingRequests = new PrismaPendingRequestRepository();
 
 const tokenRepository = new PrismaTokenRepository();
 const sellerDeps = { tokens: tokenRepository, users, settings };
