@@ -43,6 +43,9 @@ export class ManagerService {
   async updateSettings(data: SettingsUpdate): Promise<SettingsRecord> {
     assertValidRate(data.mealRate, "Meal rate");
     assertValidRate(data.guestRate, "Guest rate");
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(data.cutoffTime)) {
+      throw new SettingsError("INVALID_CUTOFF", "Cutoff time must look like 23:00 (HH:MM, 24-hour)");
+    }
     return this.deps.settings.update(data);
   }
 }
