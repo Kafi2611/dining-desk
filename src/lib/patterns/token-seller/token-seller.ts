@@ -39,6 +39,9 @@ export abstract class TokenSeller {
 
       const wallet = await tx.getWalletByUserId(request.userId);
       if (!wallet) throw new TokenError("NO_WALLET", "Wallet not found");
+      if (wallet.balance < price) {
+        throw new TokenError("INSUFFICIENT_BALANCE", "Not enough balance");
+      }
       const balanceAfter = await tx.debit(wallet.id, price);
 
       await tx.addTransaction({
