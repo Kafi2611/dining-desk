@@ -10,7 +10,7 @@ import type {
 import { WalletError } from "@/lib/services/wallet-errors";
 
 // Works on either the normal client or the client of an open prisma.$transaction.
-class PrismaWalletStore implements WalletStore {
+export class PrismaWalletStore implements WalletStore {
   constructor(protected readonly db: Prisma.TransactionClient) {}
 
   getWalletByUserId(userId: number) {
