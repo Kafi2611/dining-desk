@@ -92,6 +92,8 @@ model Transaction {
   balanceAfter Int
   note         String?
   createdAt    DateTime          @default(now())
+
+  @@index([walletId, createdAt])
 }
 
 model RechargeRequest {
@@ -115,4 +117,10 @@ model Notification {
   title     String
   readAt    DateTime?
   createdAt DateTime  @default(now())
+}
+
+// Order of the history list (FR9). Newest first is the default.
+enum HistorySort {
+  NEWEST
+  OLDEST
 }
