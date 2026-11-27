@@ -49,4 +49,24 @@ describe("ManagerService.updateSettings (FR10)", () => {
     );
     expect(settings.update).not.toHaveBeenCalled();
   });
+
+  it.each(["00:00", "09:05", "23:59"])("accepts the cutoff %s", async (cutoffTime) => {
+    const { settings, service } = setup();
+
+    await service.updateSettings({ ...VALID, cutoffTime });
+
+    expect(settings.update).toHaveBeenCalledWith({ ...VALID, cutoffTime });
+  });
+
+  it.each(["24:00", "23:60", "9:00", "2300", "abc", ""])(
+    "refuses the cutoff '%s'",
+    async (cutoffTime) => {
+      const { settings, service } = setup();
+
+      await expect(service.updateSettings({ ...VALID, cutoffTime })).rejects.toMatchObject({
+        code: "INVALID_CUTOFF",
+      });
+      expect(settings.update).not.toHaveBeenCalled();
+    },
+  );
 });
