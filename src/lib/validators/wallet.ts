@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // The form sends Taka as text (like "500" or "500.50"). We turn it into whole poisha.
-const taka = z
+export const taka = z
   .string()
   .trim()
   .regex(/^\d+(\.\d{1,2})?$/, "Enter an amount like 500 or 500.50")
