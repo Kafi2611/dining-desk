@@ -32,6 +32,7 @@ model User {
   rechargeRequests RechargeRequest[] @relation("RequestOwner")
   decidedRequests  RechargeRequest[] @relation("RequestDecider")
   notifications    Notification[]
+  mealTokens       MealToken[]
 }
 
 // One row only (id = 1). Money is stored in whole poisha: Tk 40 = 4000.
@@ -117,6 +118,31 @@ model Notification {
   title     String
   readAt    DateTime?
   createdAt DateTime  @default(now())
+}
+
+enum MealType {
+  LUNCH
+  DINNER
+  BOTH
+}
+
+enum TokenKind {
+  REGULAR
+  GUEST
+}
+
+// date is the meal day in Asia/Dhaka, written "YYYY-MM-DD". price is in poisha.
+model MealToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  date      String
+  mealType  MealType
+  kind      TokenKind
+  price     Int
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, date, kind])
 }
 
 // Order of the history list (FR9). Newest first is the default.

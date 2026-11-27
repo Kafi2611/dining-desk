@@ -21,6 +21,9 @@ export default async function StudentDashboard() {
       <p className="text-xl">
         Balance: <span data-testid="balance">{formatTaka(wallet?.balance ?? 0)}</span>
       </p>
+      <Link href="/student/buy-token" className="underline">
+        Buy token
+      </Link>
       <div className="flex flex-wrap gap-10">
         <RechargeOnlineForm />
         <RechargeOfflineForm />

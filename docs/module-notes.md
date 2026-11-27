@@ -46,3 +46,12 @@ One section per PR. Fill in after each PR is done.
 - **Pattern (if any):** none
 - **Tests:** `tests/unit/history-filter.test.ts` (type, status, Dhaka date range, only from / only to, wrong range, newest first). The `test:` commits come before the `feat:` commits.
 - **What to say in the viva:** The service turns the dates into Dhaka day boundaries and passes a query to the repository, so tests use a mock. The page only reads the filters, validates them with Zod and calls the service. The schema change at the end of the file is the one that conflicts with PR 4.
+
+## PR 4: feature/meal-tokens
+
+- **PR / branch:** PR 4, `feature/meal-tokens` (FR6, FR7, FR8)
+- **What was built:** `MealToken` model (added at the end of `schema.prisma`). Students buy tomorrow's Lunch / Dinner / Both token or a guest coupon on `/student/buy-token`. Rules: sale stops at the cutoff (23:00 Dhaka), date must be tomorrow, balance must cover the price, 1 regular token and 1 guest coupon per student per date, guest coupons max 10 per day per hall. The price is taken from the wallet in one database transaction. `LowBalance` is published when the balance falls below Tk 80.
+- **Main files:** `src/lib/patterns/token-seller/*`, `src/lib/services/token-service.ts`, `src/lib/repositories/prisma-token-repository.ts`, `src/lib/actions/tokens.ts`, `src/app/student/buy-token/`
+- **Pattern (if any):** Factory Method. Creator = `TokenSeller` (shared `sell()`, hook `checkExtraRules()`, abstract `createToken()`). ConcreteCreators = `RegularTokenSeller`, `GuestCouponSeller`. Product = `MealToken`. ConcreteProducts = `RegularToken`, `GuestCoupon`.
+- **Tests:** `meal-token`, `token-seller`, `token-cutoff`, `token-date`, `token-balance`, `token-duplicate`, `guest-coupon-limit`, `token-service` in `tests/unit/`. Clock: `vi.setSystemTime` at 22:59 and 23:00 Dhaka. Mocks: repository, settings, event bus (`vi.fn()`). Each rule has a `test:` commit before its `feat:` commit.
+- **What to say in the viva:** A new token type is 1 new seller + 1 new product class, no edits to old code (a test proves it). I rejected a `switch(type)` factory because every new type would edit the switch. `GuestCouponSeller` overrides only the hook for the hall limit. The debit and the saved token are in one transaction, so a failure undoes both.

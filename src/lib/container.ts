@@ -6,12 +6,16 @@ import { SmsNotifier } from "@/lib/patterns/events/sms-notifier";
 import { BkashAdapter } from "@/lib/patterns/payment/bkash-adapter";
 import { BkashClient } from "@/lib/patterns/payment/bkash-client";
 import { OfflineGateway } from "@/lib/patterns/payment/offline-gateway";
+import { GuestCouponSeller } from "@/lib/patterns/token-seller/guest-coupon-seller";
+import { RegularTokenSeller } from "@/lib/patterns/token-seller/regular-token-seller";
 import { PrismaHistoryRepository } from "@/lib/repositories/prisma-history-repository";
 import { PrismaNotificationRepository } from "@/lib/repositories/prisma-notification-repository";
 import { PrismaSettingsRepository } from "@/lib/repositories/prisma-settings-repository";
+import { PrismaTokenRepository } from "@/lib/repositories/prisma-token-repository";
 import { PrismaUserRepository } from "@/lib/repositories/prisma-user-repository";
 import { PrismaWalletRepository } from "@/lib/repositories/prisma-wallet-repository";
 import { HistoryService } from "@/lib/services/history-service";
+import { TokenService } from "@/lib/services/token-service";
 import { WalletService } from "@/lib/services/wallet-service";
 
 export const notificationRepository = new PrismaNotificationRepository();
@@ -26,12 +30,25 @@ for (const type of ["RechargeApproved", "RechargeRejected", "MoneyReceived", "Lo
   eventBus.subscribe(type, sms);
 }
 
+const users = new PrismaUserRepository();
+export const settings = new PrismaSettingsRepository();
+
 export const walletService = new WalletService({
   wallets: walletRepository,
-  users: new PrismaUserRepository(),
-  settings: new PrismaSettingsRepository(),
+  users,
+  settings,
   hasher: { compare: (plain, hash) => bcrypt.compare(plain, hash) },
   onlineGateway: new BkashAdapter(new BkashClient()),
   offlineGateway: new OfflineGateway(),
+  events: eventBus,
+});
+
+const tokenRepository = new PrismaTokenRepository();
+const sellerDeps = { tokens: tokenRepository, users, settings };
+
+export const tokenService = new TokenService({
+  regularSeller: new RegularTokenSeller(sellerDeps),
+  guestSeller: new GuestCouponSeller(sellerDeps),
+  settings,
   events: eventBus,
 });
